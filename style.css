@@ -1,0 +1,11 @@
+* {
+    font-family: helvetica neue, helvetica, arial, sans-serif;
+}
+
+body {
+    text-align: center;
+}
+
+canvas {
+    border: 1px solid silver;
+}

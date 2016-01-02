@@ -1,3 +1,10 @@
+requirejs.config({
+    paths: {
+        'eventemitter2': 'bower_components/eventemitter2/lib/eventemitter2'
+    }
+});
+
+define(function(require){
 var World = function(){
     var w = this.width = 640;
     var h = this.height = 480;
@@ -61,7 +68,7 @@ Tank.prototype.draw = function(canvas){
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 8, 0, Math.PI);
+    ctx.arc(this.x, this.y, 8, 0, 2*Math.PI);
     ctx.fill();
 }
 Tank.prototype.tick = function(){
@@ -128,9 +135,26 @@ Sim.prototype.tick = function(){
     this.world.ents.forEach(function(ent){
         var x = Math.floor(ent.x);
         var y = Math.floor(ent.y);
-        if (!self.world.land[y][x])
-            ent.velocity.y += -0.3; // gravity in pixels/s^2
-        // ent.velocity.y = Math.max(ent.velocity.y, -20); // terminal velocity
+
+        var g = -0.3; // gravity in pixels/s^2
+        ent.velocity.y += g;
+        if (self.world.land[y][x]) {
+            ent.velocity.y -= g;
+            // calculate surface opposition force
+            // direction is surface-normal (toward particle's side)
+            // magnitude is such that the gravity-directed component is exact opposite of gravity
+            // assume for now simple heightmap
+            var run = ent.velocity.x >= 0 ? 1 : -1;
+            for (var i=0; i<self.world.height; i++) {
+                if (!self.world.land[i][x+run]) break;
+            }
+            var rise = y - i;
+            ent.velocity.x -= (rise / run * g);
+            // var v = Math.sqrt(Math.pow(ent.velocity.x, 2), Math.pow(ent.velocity.y, 2));
+            // ent.velocity.x -= v * rise
+            // ent.velocity.y += v * run
+            // ent.velocity.y = Math.max(ent.velocity.y, -20); // terminal velocity
+        }
     })
 
     this.world.ents.forEach(function(ent){
@@ -222,3 +246,4 @@ $(function(){
     var sim = new Sim(world, view);
     sim.start();
 })
+});

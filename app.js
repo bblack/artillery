@@ -74,6 +74,7 @@ Tank.prototype.draw = function(canvas){
 Tank.prototype.tick = function(){
     var x = Math.floor(this.x);
     var y = Math.floor(this.y);
+    // TODO: remove this in favor of real collision detection/resolution
     if (this.world.land[y][x]) {
         this.velocity = {x: 0, y: 0};
     }
@@ -184,6 +185,11 @@ var View = function(canvas, world){
     this.ctx.transform(1, 0, 0, -1, 0, canvas.height);
     this.landImageData = this.ctx.createImageData(this.w, this.h);
 
+    this.vline = {canvas: document.createElement('canvas')};
+    this.vline.canvas.width = this.w;
+    this.vline.canvas.height = this.h;
+    this.vline.ctx = this.vline.canvas.getContext('2d');
+
     var self = this;
 
     setInterval(function(){
@@ -201,6 +207,20 @@ var putPixel = function(img, w, h, x, y, rgba) {
 
 var landColor = [0, 128, 0, 255];
 var skyColor = [160, 192, 255, 255];
+
+View.prototype.drawVLines = function(){
+    var self = this;
+    var ctx = self.vline.ctx;
+    ctx.clearRect(0, 0, self.w, self.h);
+    ctx.beginPath();
+    self.world.ents.forEach(function(ent){
+        ctx.moveTo(ent.x, ent.y);
+        ctx.lineTo(ent.x + ent.velocity.x, ent.y + ent.velocity.y);
+    });
+    ctx.stroke();
+    ctx.closePath();
+    self.ctx.drawImage(self.vline.canvas, 0, 0);
+};
 
 View.prototype.invalidate = function(){
     var self = this;
@@ -236,6 +256,8 @@ View.prototype.invalidate = function(){
         self.world.ents.forEach(function(ent){
             ent.draw(self.canvas);
         });
+
+        self.drawVLines();
     });
 };
 

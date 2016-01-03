@@ -118,6 +118,7 @@ Shell.prototype.tick = function(){
 
 var Sim = function(world, view){
     this.frametime = 1000 / 60; // ms per frame
+    this.g = -0.3; // gravity in pixels/tick/tick
 
     if (!(world instanceof World))
         throw 'Invalid world passed';
@@ -137,10 +138,10 @@ Sim.prototype.tick = function(){
         var x = Math.floor(ent.x);
         var y = Math.floor(ent.y);
 
-        var g = -0.3; // gravity in pixels/s^2
-        ent.velocity.y += g;
+        ent.velocity.y += self.g;
+
         if (self.world.land[y][x]) {
-            ent.velocity.y -= g;
+            ent.velocity.y -= self.g;
             // calculate surface opposition force
             // direction is surface-normal (toward particle's side)
             // magnitude is such that the gravity-directed component is exact opposite of gravity
@@ -150,7 +151,7 @@ Sim.prototype.tick = function(){
                 if (!self.world.land[i][x+run]) break;
             }
             var rise = y - i;
-            ent.velocity.x -= (rise / run * g);
+            ent.velocity.x -= (rise / run * self.g);
             // var v = Math.sqrt(Math.pow(ent.velocity.x, 2), Math.pow(ent.velocity.y, 2));
             // ent.velocity.x -= v * rise
             // ent.velocity.y += v * run

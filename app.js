@@ -41,8 +41,7 @@ var World = function(){
     // this.addEntity(shell);
 
     var tank = new Tank();
-    tank.x = 301;
-    tank.y = 300;
+    tank.position = new Victor(301, 300);
     this.addEntity(tank);
 }
 
@@ -61,8 +60,7 @@ World.prototype.destroyEntity = function(ent){
 var Entity = function(){}
 
 var Tank = function(){
-    this.x = 0;
-    this.y = 0;
+    this.position = new Victor(0, 0);
     this.velocity = {x: 0, y: 0};
     this.color = 'red';
 }
@@ -71,12 +69,12 @@ Tank.prototype.draw = function(canvas){
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.arc(this.x, this.y, 8, 0, 2*Math.PI);
+    ctx.arc(this.position.x, this.position.y, 8, 0, 2*Math.PI);
     ctx.fill();
 }
 Tank.prototype.tick = function(){
-    var x = Math.floor(this.x);
-    var y = Math.floor(this.y);
+    var x = Math.floor(this.position.x);
+    var y = Math.floor(this.position.y);
     // TODO: remove this in favor of real collision detection/resolution
     if (this.world.land[y][x]) {
         this.velocity = {x: 0, y: 0};
@@ -85,11 +83,11 @@ Tank.prototype.tick = function(){
 
 var Shell = function(){
     if (arguments.length == 2) {
-        this.x = arguments[0];
-        this.y = arguments[1];
+        this.position.x = arguments[0];
+        this.position.y = arguments[1];
     } else if (arguments.length == 0) {
-        this.x = 0;
-        this.y = 0;
+        this.position.x = 0;
+        this.position.y = 0;
     } else {
         throw 'wrong constructor signature';
     }
@@ -101,11 +99,11 @@ Shell.__proto__ = Entity;
 Shell.prototype.draw = function(canvas) {
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = 'black';
-    ctx.fillRect(this.x - 1, this.y - 1, 3, 3);
+    ctx.fillRect(this.position.x - 1, this.position.y - 1, 3, 3);
 }
 Shell.prototype.tick = function(){
-    var x = Math.floor(this.x);
-    var y = Math.floor(this.y);
+    var x = Math.floor(this.position.x);
+    var y = Math.floor(this.position.y);
     // TODO - OPERATE ONLY ON VALID X,Y
     if (this.world.land[y][x]) {
         for (var col = x - this.blastRadius; col < x + this.blastRadius; col++) {
@@ -144,13 +142,13 @@ Sim.prototype.lowestOpenRow = function(col){
 Sim.prototype.resolveCollision = function(ent){
     // determine pixel where collision occurs, primarily so we can calculate its
     // surface normal force, and secondarily to place the entity there.
-    var x = Math.floor(ent.x);
-    var y = Math.floor(ent.y);
+    var x = Math.floor(ent.position.x);
+    var y = Math.floor(ent.position.y);
     var self = this;
     if (self.world.land[y][x]) {
         // undo it (i.e., place the ent back outside the land)
-        ent.x -= ent.velocity.x;
-        ent.y -= ent.velocity.y;
+        ent.position.x -= ent.velocity.x;
+        ent.position.y -= ent.velocity.y;
         // velocity vector gets reflected off surface:
         var run = ent.velocity.x >= 0 ? 1 : -1;
         var rise = self.lowestOpenRow(x + run) - self.lowestOpenRow(x);
@@ -174,8 +172,8 @@ Sim.prototype.tick = function(){
     })
 
     this.world.ents.forEach(function(ent){
-        ent.x += ent.velocity.x;
-        ent.y += ent.velocity.y;
+        ent.position.x += ent.velocity.x;
+        ent.position.y += ent.velocity.y;
     })
 
     this.world.ents.forEach(function(ent){
@@ -233,8 +231,8 @@ View.prototype.drawVLines = function(){
     ctx.clearRect(0, 0, self.w, self.h);
     ctx.beginPath();
     self.world.ents.forEach(function(ent){
-        ctx.moveTo(ent.x, ent.y);
-        ctx.lineTo(ent.x + ent.velocity.x, ent.y + ent.velocity.y);
+        ctx.moveTo(ent.position.x, ent.position.y);
+        ctx.lineTo(ent.position.x + ent.velocity.x, ent.position.y + ent.velocity.y);
     });
     ctx.stroke();
     ctx.closePath();
@@ -265,7 +263,6 @@ View.prototype.invalidate = function(){
                         rgba);
                 };
             };
-            console.log('yes')
             self.lastLandDrawn = self.world.land.lastModified;
         }
 

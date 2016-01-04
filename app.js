@@ -1,10 +1,13 @@
 requirejs.config({
     paths: {
-        'eventemitter2': 'bower_components/eventemitter2/lib/eventemitter2'
+        'eventemitter2': 'bower_components/eventemitter2/lib/eventemitter2',
+        victor: 'bower_components/victor/build/victor'
     }
 });
 
 define(function(require){
+var Victor = require('victor');
+
 var World = function(){
     var w = this.width = 640;
     var h = this.height = 480;
@@ -32,13 +35,13 @@ var World = function(){
     })
     land.lastModified = Date.now();
 
-    var shell = new Shell(200, 200);
-    shell.velocity.y = 10;
-    shell.velocity.x = 5;
-    this.addEntity(shell);
+    // var shell = new Shell(200, 200);
+    // shell.velocity.y = 10;
+    // shell.velocity.x = 5;
+    // this.addEntity(shell);
 
     var tank = new Tank();
-    tank.x = 300;
+    tank.x = 301;
     tank.y = 300;
     this.addEntity(tank);
 }
@@ -130,26 +133,36 @@ var Sim = function(world, view){
     this.view = view;
 };
 
+Sim.prototype.lowestOpenRow = function(col){
+    var self = this;
+    for (var i=0; i<self.world.height; i++) {
+        if (!self.world.land[i][col]) break;
+    }
+    return i;
+}
+
 Sim.prototype.resolveCollision = function(ent){
     // determine pixel where collision occurs, primarily so we can calculate its
     // surface normal force, and secondarily to place the entity there.
-    var self = this;
     var x = Math.floor(ent.x);
     var y = Math.floor(ent.y);
-    // calculate surface opposition force
-    // direction is surface-normal (toward particle's side)
-    // magnitude is such that the gravity-directed component is exact opposite of gravity
-    // assume for now simple heightmap
-    var run = ent.velocity.x >= 0 ? 1 : -1;
-    for (var i=0; i<self.world.height; i++) {
-        if (!self.world.land[i][x+run]) break;
+    var self = this;
+    if (self.world.land[y][x]) {
+        // undo it (i.e., place the ent back outside the land)
+        ent.x -= ent.velocity.x;
+        ent.y -= ent.velocity.y;
+        // velocity vector gets reflected off surface:
+        var run = ent.velocity.x >= 0 ? 1 : -1;
+        var rise = self.lowestOpenRow(x + run) - self.lowestOpenRow(x);
+        var surfnorm = new Victor(-rise, run);
+        // TODO: use rotateBy. in current Victor, they are swapped.
+        var v = new Victor(ent.velocity.x, ent.velocity.y)
+            .rotate(surfnorm.verticalAngle())
+            .invertX()
+            .rotate(-surfnorm.verticalAngle())
+            .invert();
+        _.extend(ent.velocity, _.pick(v, 'x', 'y'));
     }
-    var rise = y - i;
-    ent.velocity.x -= (rise / run * self.g);
-    // var v = Math.sqrt(Math.pow(ent.velocity.x, 2), Math.pow(ent.velocity.y, 2));
-    // ent.velocity.x -= v * rise
-    // ent.velocity.y += v * run
-    // ent.velocity.y = Math.max(ent.velocity.y, -20); // terminal velocity
 };
 
 Sim.prototype.tick = function(){
@@ -157,19 +170,16 @@ Sim.prototype.tick = function(){
     var self = this;
 
     this.world.ents.forEach(function(ent){
-        var x = Math.floor(ent.x);
-        var y = Math.floor(ent.y);
-
         ent.velocity.y += self.g;
-
-        if (self.world.land[y][x]) {
-            self.resolveCollision(ent);
-        }
     })
 
     this.world.ents.forEach(function(ent){
         ent.x += ent.velocity.x;
         ent.y += ent.velocity.y;
+    })
+
+    this.world.ents.forEach(function(ent){
+        self.resolveCollision(ent);
     })
 
     this.world.ents.forEach(function(ent){

@@ -163,7 +163,6 @@ Sim.prototype.tick = function(){
         ent.velocity.y += self.g;
 
         if (self.world.land[y][x]) {
-            ent.velocity.y -= self.g; // undo what we just did. TODO: fix
             self.resolveCollision(ent);
         }
     })

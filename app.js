@@ -130,6 +130,28 @@ var Sim = function(world, view){
     this.view = view;
 };
 
+Sim.prototype.resolveCollision = function(ent){
+    // determine pixel where collision occurs, primarily so we can calculate its
+    // surface normal force, and secondarily to place the entity there.
+    var self = this;
+    var x = Math.floor(ent.x);
+    var y = Math.floor(ent.y);
+    // calculate surface opposition force
+    // direction is surface-normal (toward particle's side)
+    // magnitude is such that the gravity-directed component is exact opposite of gravity
+    // assume for now simple heightmap
+    var run = ent.velocity.x >= 0 ? 1 : -1;
+    for (var i=0; i<self.world.height; i++) {
+        if (!self.world.land[i][x+run]) break;
+    }
+    var rise = y - i;
+    ent.velocity.x -= (rise / run * self.g);
+    // var v = Math.sqrt(Math.pow(ent.velocity.x, 2), Math.pow(ent.velocity.y, 2));
+    // ent.velocity.x -= v * rise
+    // ent.velocity.y += v * run
+    // ent.velocity.y = Math.max(ent.velocity.y, -20); // terminal velocity
+};
+
 Sim.prototype.tick = function(){
     // simulate
     var self = this;
@@ -141,21 +163,8 @@ Sim.prototype.tick = function(){
         ent.velocity.y += self.g;
 
         if (self.world.land[y][x]) {
-            ent.velocity.y -= self.g;
-            // calculate surface opposition force
-            // direction is surface-normal (toward particle's side)
-            // magnitude is such that the gravity-directed component is exact opposite of gravity
-            // assume for now simple heightmap
-            var run = ent.velocity.x >= 0 ? 1 : -1;
-            for (var i=0; i<self.world.height; i++) {
-                if (!self.world.land[i][x+run]) break;
-            }
-            var rise = y - i;
-            ent.velocity.x -= (rise / run * self.g);
-            // var v = Math.sqrt(Math.pow(ent.velocity.x, 2), Math.pow(ent.velocity.y, 2));
-            // ent.velocity.x -= v * rise
-            // ent.velocity.y += v * run
-            // ent.velocity.y = Math.max(ent.velocity.y, -20); // terminal velocity
+            ent.velocity.y -= self.g; // undo what we just did. TODO: fix
+            self.resolveCollision(ent);
         }
     })
 

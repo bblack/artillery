@@ -7,55 +7,7 @@ requirejs.config({
 
 define(function(require){
 var Victor = require('victor');
-
-var World = function(){
-    var w = this.width = 640;
-    var h = this.height = 480;
-    var land = this.land = [];
-    var ents = this.ents = [];
-
-    _.times(h, function(rownum){
-        var row = [];
-        land.push(row);
-        _.times(w, function(colnum){
-            row.push(0);
-        })
-    })
-
-    var surfaceGen = function(x) {
-        return Math.sin(x / 50) * 50 + 200;
-    };
-
-    // generating land
-    _.times(w, function(x){
-        var maxY = surfaceGen(x);
-        _.times(h, function(y){
-            land[y][x] = (y <= maxY) ? 1 : 0;
-        })
-    })
-    land.lastModified = Date.now();
-
-    // var shell = new Shell(200, 200);
-    // shell.velocity.y = 10;
-    // shell.velocity.x = 5;
-    // this.addEntity(shell);
-
-    var tank = new Tank();
-    tank.position = new Victor(301, 300);
-    this.addEntity(tank);
-}
-
-World.prototype.addEntity = function(ent){
-    this.ents.push(ent);
-    ent.world = this;
-}
-
-World.prototype.destroyEntity = function(ent){
-    // TODO - GIVE EACH ENTITY A UUID AND DROP ARRAY IN FAVOR OF FAST HASH TABLE
-    var idx = this.ents.indexOf(ent);
-    if (idx == -1) return;
-    this.ents.splice(idx, 1)
-}
+var World = require('./world');
 
 var Entity = function(){}
 
@@ -280,6 +232,16 @@ View.prototype.invalidate = function(){
 $(function(){
     var canvas = $('canvas')[0];
     var world = new World();
+
+    // var shell = new Shell(200, 200);
+    // shell.velocity.y = 10;
+    // shell.velocity.x = 5;
+    // this.addEntity(shell);
+
+    var tank = new Tank();
+    tank.position = new Victor(301, 300);
+    world.addEntity(tank);
+
     var view = new View(canvas, world);
     var sim = new Sim(world, view);
     sim.start();

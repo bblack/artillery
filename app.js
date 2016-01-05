@@ -11,7 +11,7 @@ var World = require('./world');
 var Sim = require('./sim');
 var View = require('./view');
 
-var Entity = function(){}
+function Entity(){}
 
 var Tank = function(){
     this.position = new Victor(0, 0);
@@ -26,14 +26,7 @@ Tank.prototype.draw = function(canvas){
     ctx.arc(this.position.x, this.position.y, 8, 0, 2*Math.PI);
     ctx.fill();
 }
-Tank.prototype.tick = function(){
-    var x = Math.floor(this.position.x);
-    var y = Math.floor(this.position.y);
-    // TODO: remove this in favor of real collision detection/resolution
-    if (this.world.land[y][x]) {
-        this.velocity = {x: 0, y: 0};
-    }
-}
+Tank.prototype.tick = function(){};
 
 var Shell = function(){
     if (arguments.length == 2) {

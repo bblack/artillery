@@ -20,6 +20,12 @@ define(function(require){
                 land[y][x] = (y <= maxY) ? 1 : 0;
             })
         })
+        _.times(w, function(x){
+            _.times(20, function(y){
+                land[y+260+Math.floor(x*0.02)][x] = 1;
+            })
+        })
+
         land.lastModified = Date.now();
     }
     World.prototype.addEntity = function(ent){

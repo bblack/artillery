@@ -20,12 +20,39 @@ define(function(require){
     Sim.prototype.resolveCollision = function(ent){
         // determine pixel where collision occurs, primarily so we can calculate its
         // surface normal force, and secondarily to place the entity there.
-        var x = Math.floor(ent.position.x);
-        var y = Math.floor(ent.position.y);
-        if (this.world.land[y][x]) {
+
+        var p = ent.position.clone().unfloat(); // round this, i guess
+        if (this.world.land[p.y][p.x]) {
             // undo it (i.e., place the ent back outside the land)
             ent.position.x -= ent.velocity.x;
             ent.position.y -= ent.velocity.y;
+            // use bresenham's line algo to find the soonest colliding pixel
+            var v = ent.velocity;
+            var pPrime;
+            var lastPixel;
+            var thisPixel;
+            var yIsLonger = Math.abs(v.y) > Math.abs(v.x);
+            var long = yIsLonger ? v.y : v.x;
+            var short = yIsLonger ? v.x : v.y;
+            for (var i=0; i < Math.abs(long); i += (long > 0 ? 1 : -1)) {
+                var p = ent.position.clone().unfloat(); // round this, i guess
+                if (yIsLonger) {
+                    var row = i + p.y;
+                    var col = Math.round(v.x / v.y * (row - p.y) + p.x);
+                } else {
+                    var col = i + p.x;
+                    var row = Math.round(v.y / v.x * (col - p.x) + p.y);
+                }
+                lastPixel = thisPixel;
+                thisPixel = [row, col];
+                if (this.world.land[row][col]) {
+                    ent.position.x = col;
+                    ent.position.y = row;
+                    break;
+                }
+            }
+            x = Math.floor(ent.position.x);
+            y = Math.floor(ent.position.y);
             // velocity vector gets reflected off surface:
             var run = ent.velocity.x >= 0 ? 1 : -1;
             var rise = this.lowestOpenRow(x + run) - this.lowestOpenRow(x);

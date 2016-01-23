@@ -15,7 +15,7 @@ function Entity(){}
 
 var Tank = function(){
     this.position = new Victor(0, 0);
-    this.velocity = {x: 0, y: 0};
+    this.velocity = new Victor(0, 0);
     this.color = 'red';
 }
 Tank.__proto__ = Entity;
@@ -39,7 +39,7 @@ var Shell = function(){
         throw 'wrong constructor signature';
     }
 
-    this.velocity = {x: 0, y: 0};
+    this.velocity = new Victor(0, 0);
     this.blastRadius = 10;
 };
 Shell.__proto__ = Entity;

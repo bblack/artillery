@@ -12,14 +12,10 @@ define(function(require){
         this.frametime = 1000 / 60; // ms per frame
         this.g = -0.3; // gravity in pixels/tick/tick
     }
-    Sim.prototype.lowestOpenRow = function(col){
-        for (var i=0; i<this.world.height; i++) {
-            if (!this.world.land[i][col]) break;
-        }
-        return i;
-    }
     Sim.prototype.resolveCollision = function(ent){
         // move the ent back, then use bresenham to find first colliding pixel
+        // TODO: should we be unfloating here? should we instead be unfloating
+        // only when comparing against land?
         var p = ent.position.clone().subtract(ent.velocity).unfloat();
         var v = ent.velocity.clone();
         var yIsLonger = Math.abs(v.y) > Math.abs(v.x);
@@ -29,7 +25,7 @@ define(function(require){
         var xDir = new Victor(v.x > 0 ? 1 : -1, 0);
         // for every pixel moved along the longer axis,
         // move this many along the short:
-        var shortPerLong = short / long;
+        var shortPerLong = Math.abs(short / long);
         assert(Math.abs(shortPerLong) >= 0 && Math.abs(shortPerLong) <= 1);
         var row = p.y;
         var col = p.x;
@@ -38,7 +34,9 @@ define(function(require){
         var collision;
         for (var i = 0; Math.abs(i) < Math.abs(long); i += (long > 0 ? 1 : -1)) {
             p.add(yIsLonger ? yDir : xDir); // move 1 unit along longer axis
-            p[yIsLonger ? 'x' : 'y'] += shortPerLong; // and less along shorter
+            var shortAxisDelta = (yIsLonger ? xDir : yDir).clone()
+                .multiplyScalar(shortPerLong);
+            p.add(shortAxisDelta); // and less along shorter
             // p now has int component on long axis; float component on short.
             nextCol = Math.round(p.x);
             nextRow = Math.round(p.y);

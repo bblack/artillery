@@ -16,7 +16,7 @@ define(function(require){
         // move the ent back, then use bresenham to find first colliding pixel
         // TODO: should we be unfloating here? should we instead be unfloating
         // only when comparing against land?
-        var p = ent.position.clone().subtract(ent.velocity).unfloat();
+        var p = ent.position.clone().subtract(ent.velocity);
         var v = ent.velocity.clone();
         var yIsLonger = Math.abs(v.y) > Math.abs(v.x);
         var long = yIsLonger ? v.y : v.x;
@@ -38,14 +38,24 @@ define(function(require){
                 .multiplyScalar(shortPerLong);
             p.add(shortAxisDelta); // and less along shorter
             // p now has int component on long axis; float component on short.
-            nextCol = Math.round(p.x);
-            nextRow = Math.round(p.y);
-            if (this.world.land[nextRow][nextCol]) {
+            nextCol = p.x;
+            nextRow = p.y;
+            if (this.world.land.check(nextCol, nextRow)) {
                 collision = true;
                 break;
             }
             row = nextRow;
             col = nextCol;
+        }
+        // and a final check for the final position, which is not necessarily
+        // an integer number of pixels from the start position on the longest
+        // axis
+        if (!collision) {
+            if (this.world.land.check(ent.position.x, ent.position.y)) {
+                collision = true;
+                row = ent.position.y;
+                col = ent.position.x;
+            }
         }
         if (collision) {
             // position ent just before land
@@ -54,13 +64,13 @@ define(function(require){
             var surfnorm = new Victor(0, 0);
             for (var dx = -1; dx <= 1; dx++) {
                 for (var dy = -1; dy <= 1; dy++) {
-                    if (this.world.land[p.y + dy][p.x + dx]) {
+                    if (this.world.land.check(p.x + dx, p.y + dy)) {
                         surfnorm.add(new Victor(dx, dy).invert().norm());
                     }
                 }
             }
             surfnorm.norm();
-            // assert(surfnorm.dot(v) <= 1e-9);
+            assert(surfnorm.dot(v) <= 1e-9);
             // TODO: use rotateBy. in current Victor, they are swapped.
             var newV = v.clone()
                 .rotate(surfnorm.verticalAngle())

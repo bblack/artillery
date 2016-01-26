@@ -3,6 +3,9 @@ define(function(require){
         var w = this.width = 640;
         var h = this.height = 480;
         var land = this.land = [];
+        land.check = function(x, y) {
+            return this[Math.round(y)][Math.round(x)];
+        }
         var ents = this.ents = [];
 
         _.times(h, function(rownum){

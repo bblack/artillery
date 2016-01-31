@@ -47,16 +47,6 @@ define(function(require){
             row = nextRow;
             col = nextCol;
         }
-        // and a final check for the final position, which is not necessarily
-        // an integer number of pixels from the start position on the longest
-        // axis
-        if (!collision) {
-            if (this.world.land.check(ent.position.x, ent.position.y)) {
-                collision = true;
-                row = ent.position.y;
-                col = ent.position.x;
-            }
-        }
         if (collision) {
             // position ent just before land
             p.copy({x: col, y: row});

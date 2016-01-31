@@ -13,13 +13,18 @@ var Sim = require('./sim');
 var View = require('./view');
 
 function Entity(){}
+Entity.prototype.sleep = function(){
+    this.asleep = true;
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+}
 
-var Tank = function(){
+function Tank(){
     this.position = new Victor(0, 0);
     this.velocity = new Victor(0, 0);
     this.color = 'red';
 }
-Tank.__proto__ = Entity;
+Tank.prototype = Object.create(Entity.prototype);
 Tank.prototype.draw = function(canvas){
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = this.color;
@@ -29,7 +34,7 @@ Tank.prototype.draw = function(canvas){
 }
 Tank.prototype.tick = function(){};
 
-var Shell = function(){
+function Shell(){
     if (arguments.length == 2) {
         this.position.x = arguments[0];
         this.position.y = arguments[1];
@@ -42,8 +47,8 @@ var Shell = function(){
 
     this.velocity = new Victor(0, 0);
     this.blastRadius = 10;
-};
-Shell.__proto__ = Entity;
+}
+Shell.prototype = Object.create(Entity.prototype);
 Shell.prototype.draw = function(canvas) {
     var ctx = canvas.getContext('2d');
     ctx.fillStyle = 'black';

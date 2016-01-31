@@ -78,16 +78,24 @@ define(function(require){
         // simulate
         var self = this;
         _.chain(this.world.ents)
+        .reject({asleep: true})
         .each(function(ent){
             ent.velocity.y += self.g;
         })
         .each(function(ent){
+            ent.posBefore = ent.position.clone();
             ent.position.add(ent.velocity);
         })
         .each(function(ent){
             self.resolveCollision(ent);
         })
         .each(function(ent){
+            if (ent.posBefore.clone().subtract(ent.position).lengthSq() > 1) {
+                ent.lastChangedAt = Date.now();
+            }
+            if (ent.lastChangedAt < (Date.now() - 2000)) {
+                ent.sleep();
+            }
             ent.tick();
         });
     }

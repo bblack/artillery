@@ -1,6 +1,7 @@
 define(function(require){
     var Victor = require('victor');
     var assert = require('assert');
+    var _ = require('underscore');
 
     function Sim(world, view){
         if (world.constructor.name != 'World')
@@ -60,7 +61,7 @@ define(function(require){
                 }
             }
             surfnorm.norm();
-            assert(surfnorm.dot(v) <= 1e-9);
+            assert.warn(surfnorm.dot(v) <= 1e-9);
             // TODO: use rotateBy. in current Victor, they are swapped.
             var newV = v.clone()
                 .rotate(surfnorm.verticalAngle())
@@ -76,17 +77,17 @@ define(function(require){
     Sim.prototype.tick = function(){
         // simulate
         var self = this;
-        this.world.ents.forEach(function(ent){
+        _.chain(this.world.ents)
+        .each(function(ent){
             ent.velocity.y += self.g;
-        });
-        this.world.ents.forEach(function(ent){
-            ent.position.x += ent.velocity.x;
-            ent.position.y += ent.velocity.y;
-        });
-        this.world.ents.forEach(function(ent){
+        })
+        .each(function(ent){
+            ent.position.add(ent.velocity);
+        })
+        .each(function(ent){
             self.resolveCollision(ent);
-        });
-        this.world.ents.forEach(function(ent){
+        })
+        .each(function(ent){
             ent.tick();
         });
     }

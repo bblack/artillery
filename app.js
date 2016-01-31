@@ -1,6 +1,7 @@
 requirejs.config({
     paths: {
         'eventemitter2': 'bower_components/eventemitter2/lib/eventemitter2',
+        underscore: 'bower_components/underscore/underscore',
         victor: 'bower_components/victor/build/victor'
     }
 });
